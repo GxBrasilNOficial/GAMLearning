@@ -1,7 +1,7 @@
 # GAMLearning
 Repositório com livro sobre o gam e com exemplos marotos que vão facilitar sua vida
  
- <br><br>
+<br>
 :shipit: Autor: <b>Um Nobre</b> ([@fnevesgx](https://github.com/fnevesgx)) 
 
 
