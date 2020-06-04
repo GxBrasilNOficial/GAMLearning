@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ExportFile>
+  <KMW>
+    <MajorVersion>4</MajorVersion>
+    <MinorVersion>0</MinorVersion>
+    <Build>140712</Build>
+  </KMW>
+  <Source kb="c1b39a9f-70e7-4f47-96ff-379be13b1676" username="DESKTOP-1PP854A\Felipe Neves" UNCPath="\\DESKTOP-1PP854A\D$\Dev\Projetos\LucianoJunqueira\AgroCrm_V01">
+    <Version guid="8cbf6afc-8de1-4fc7-90fd-c7a82c8bdc2f" name="AgrocrmV31" />
+  </Source>
+  <Objects>
+    <Object parent="Seguranca_proc" parentType="00000000-0000-0000-0000-000000000008" parentGuid="9b89eb9f-b87d-4951-bff8-6b42a9f6640f" user="DESKTOP-1PP854A\Felipe Neves" versionDate="0001-01-01T00:00:00.0000000" lastUpdate="2020-06-03T21:26:27.0000000Z" checksum="22760fc597d1795a9063a6e442e6d4c4" fullyQualifiedName="prCRUDGAMUser" moduleGuid="afa47377-41d5-4ae8-9755-6f53150aa361" guid="662e9209-b723-4dbf-9876-142ab0764147" name="prCRUDGAMUser" type="84a12160-f59b-4ad7-a683-ea4481ac23e9" description="pr CRUDGAMUser">
+      <Part type="528d1c06-a9c2-420d-bd35-21dca83f12ff">
+        <Source><![CDATA[
+
+&GAMUser.Load(&UsuarioGUID)
+
+Do Case
+	Case &Mode = GAMAPiMode.Insert or &Mode = GAMAPiMode.Update
+	
+
+//		Campos inutilizados
+		
+//		&GAMUser.AuthenticationTypeName = &GAMUserAuthenticationTypeName 
+//		&GAMUser.EMail = &GAMUserEmail 
+//		&GAMUser.LastName = &GAMUserLastName
+//		&GAMUser.ExternalId = &GAMUserExternalId 
+//		&GAMUser.Birthday = &GAMUserBirthday 
+//		&GAMUser.Gender = &GAMUserGender 
+//		&GAMUser.URLProfile = &GAMUserURLProfile  
+//		&GAMUser.URLImage = &GAMUserURLImage 
+//		&GAMUser.ActivationDate = &GAMUserActivationDate 
+//		&GAMUser.IsBlocked = &GAMUserIsBlocked 
+//		&GAMUser.CannotChangePassword = &GAMUserCannotChangePassword
+//		&GAMUser.MustChangePassword = &GAMUserMustChangePassword 
+//		&GAMUser.SecurityPolicyId = &GAMUserSecurityPolicyId
+		&GAMUser.Name                   = &UsuarioLogin
+		&GAMUser.EMail                  = &UsuarioEmail
+		&GAMUser.FirstName              = &UsuarioNome
+		&GAMUser.LastName 				= &UsuarioSobreNome				
+		&GAMUser.IsActive               = true
+		&GAMUser.IsEnabledInRepository  = true
+		&GAMUser.DontReceiveInformation = true
+		&GAMUser.IsBlocked              = &UsuarioBloqueado
+		&GamUser.URLImage				= &UsuarioFoto.ImageURI		
+		if not &UsuarioSenha.IsEmpty()
+			&GAMUser.Password = &UsuarioSenha 
+		endif
+	
+		&GAMUser.Save()
+		&UsuarioGUID       = &GAMUser.GUID
+		&GamRoleCollection = &GAMUser.GetRoles(&GamErrorCollection)
+		do 'GamError'
+		
+		if not &UsuarioPerfil.IsEmpty()
+			For &GamRole in &GamRoleCollection
+				
+				If &GamRole.Description <> !'ServicoMensagens'
+					&GAMUser.DeleteRole(&GamRole, &GamErrorCollection)
+					do 'GamError'
+				Endif
+				
+			Endfor
+			
+			&GAMUser.AddRole(GAMRepository.GetRoleByGUID(&UsuarioPerfil, &GamErrorCollection), &GamErrorCollection)
+			do 'GamError'
+		endif
+	
+	
+		
+		If &Mode = GAMAPiMode.Insert
+//			Do 'MandarEmail'
+		EndIf
+	
+		
+		
+//		Endif
+	Case &Mode = GAMAPiMode.Delete
+		&GAMUser.Delete()
+EndCase
+
+If not &GAMUser.Success()	
+	&GamErrorCollection = &GAMUser.GetErrors()	
+	do 'GamError'
+Endif
+
+
+sub 'GamError'
+	
+
+	
+	For &GamError in &GamErrorCollection
+		
+		&Message.Id 		 	= &GamError.Code.ToString()
+		&Message.Description 	= &GamError.Message
+		&Message.Type        	= MessageTypes.Error
+		&Messages.Add(&Message)
+		
+	EndFor	
+endsub
+
+
+  /////////////////////////////////////////////////////////
+ //Mandar e-mail para o cliente com o código de ativação//
+/////////////////////////////////////////////////////////
+//Sub 'MandarEmail'
+//	//Pegando o repository do GAM setado para USER, definindo config para enviar e-mail de ativação
+//	&Repository = GAMRepository.Get() 
+//
+//	If &Repository.UserActivationMethod = GAMUserActivationMethod.User
+//		
+//	   &ActivactionKey = &GAMUser.GetActivationKey(&Errors)
+//	   
+//	Endif
+//		
+//Endsub
+
+
+
+]]></Source>
+        <Properties><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+      </Part>
+      <Part type="c414ed00-8cc4-4f44-8820-4baf93547173">
+        <Properties />
+      </Part>
+      <Part type="9b0a32a3-de6d-4be1-a4dd-1b85d3741534">
+        <Source><![CDATA[parm(in:&Mode, 
+	 in:&UsuarioLogin, 
+	 in:&UsuarioEmail, 
+	 in:&UsuarioPerfil, 
+	 in:&UsuarioNome, 
+	 in:&UsuarioSobreNome, 
+	 in:&UsuarioSenha, 
+	 in:&UsuarioBloqueado, 
+	 in: &UsuarioFoto,
+	 inout:&UsuarioGUID,
+	 out:&Messages);
+]]></Source>
+        <Properties><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+      </Part>
+      <Part type="763f0d8b-d8ac-4db4-8dd4-de8979f2b5b9">
+        <Source><![CDATA[]]></Source>
+        <Properties><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+      </Part>
+      <Part type="e4c4ade7-53f0-4a56-bdfd-843735b66f47">
+        <Variable Name="GamError">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>GamError</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>True</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>exo:GAMError, GeneXusSecurity</Value></Property></Properties>
+        </Variable>
+        <Variable Name="GamErrorCollection">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>GamErrorCollection</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>True</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>exo:GAMError, GeneXusSecurity</Value></Property><Property><Name>AttCollection</Name><Value>True</Value></Property></Properties>
+        </Variable>
+        <Variable Name="GamRole">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>GamRole</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>True</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>exo:GAMRole, GeneXusSecurity</Value></Property></Properties>
+        </Variable>
+        <Variable Name="GamRoleCollection">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>GamRoleCollection</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>True</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>exo:GAMRole, GeneXusSecurity</Value></Property><Property><Name>AttCollection</Name><Value>True</Value></Property></Properties>
+        </Variable>
+        <Variable Name="GAMUser">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>GAMUser</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>True</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>exo:GAMUser, GeneXusSecurity</Value></Property></Properties>
+        </Variable>
+        <Variable Name="ActivactionKey">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>ActivactionKey</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>bas:Character</Value></Property></Properties>
+        </Variable>
+        <Variable Name="Message">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>Message</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>sdt:Messages.Message, GeneXus.Common</Value></Property></Properties>
+        </Variable>
+        <Variable Name="Messages">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>Messages</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>False</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>sdt:Messages, GeneXus.Common</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioBloqueado">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioBloqueado</Value></Property><Property><Name>Description</Name><Value>Bloqueado</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>bas:Boolean</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioCodigo">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioCodigo</Value></Property><Property><Name>Description</Name><Value>Usuário</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioEmail">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioEmail</Value></Property><Property><Name>Description</Name><Value>Email</Value></Property><Property><Name>idIsAutoDefinedVariable</Name><Value>False</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMEMail, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioGUID">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioGUID</Value></Property><Property><Name>Description</Name><Value>GUID</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMGUID, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioLogin">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioLogin</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMUserLogin, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioNome">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioNome</Value></Property><Property><Name>Description</Name><Value>Usuario Nome</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMUserIdentification, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioPerfil">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioPerfil</Value></Property><Property><Name>Description</Name><Value>Perfil</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMDescriptionLong, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioSenha">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioSenha</Value></Property><Property><Name>IsStandardVariable</Name><Value>False</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMPassword, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioSobreNome">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioSobreNome</Value></Property><Property><Name>idBasedOn</Name><Value>Domain:GAMDescriptionShort, GeneXusSecurityCommon</Value></Property></Properties>
+        </Variable>
+        <Variable Name="UsuarioFoto">
+          <Documentation />
+          <Properties><Property><Name>Name</Name><Value>UsuarioFoto</Value></Property><Property><Name>ATTCUSTOMTYPE</Name><Value>bas:Image</Value></Property></Properties>
+        </Variable>
+        <Properties><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+      </Part>
+      <Part type="ad3ca970-19d0-44e1-a7b7-db05556e820c">
+        <Help>
+          <HelpItem>
+            <Language>88313f43-5eb2-0000-0028-e8d9f5bf9588-Portuguese</Language>
+            <Content />
+          </HelpItem>
+        </Help>
+        <Properties><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+      </Part>
+      <Part type="babf62c5-0111-49e9-a1c3-cc004d90900a">
+        <Properties />
+      </Part>
+      <Properties><Property><Name>Name</Name><Value>prCRUDGAMUser</Value></Property><Property><Name>CommitOnExit</Name><Value>No</Value></Property><Property><Name>IsDefault</Name><Value>False</Value></Property></Properties>
+    </Object>
+  </Objects>
+  <Dependencies>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Object" Id="84a12160-f59b-4ad7-a683-ea4481ac23e9">
+      <Properties Name="Procedure" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="528d1c06-a9c2-420d-bd35-21dca83f12ff">
+      <Properties Name="Source" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="c414ed00-8cc4-4f44-8820-4baf93547173">
+      <Properties Name="Layout" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="9b0a32a3-de6d-4be1-a4dd-1b85d3741534">
+      <Properties Name="Rules" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="763f0d8b-d8ac-4db4-8dd4-de8979f2b5b9">
+      <Properties Name="Conditions" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="e4c4ade7-53f0-4a56-bdfd-843735b66f47">
+      <Properties Name="Variables" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="ad3ca970-19d0-44e1-a7b7-db05556e820c">
+      <Properties Name="Help" PackageName="GenexusBL" />
+    </Reference>
+    <Reference Package="3ea7e1c6-b849-4df9-931a-070171a8a2f0" Type="Part" Id="babf62c5-0111-49e9-a1c3-cc004d90900a">
+      <Properties Name="Documentation" PackageName="GenexusBL" />
+    </Reference>
+  </Dependencies>
+  <ObjectsIdentityMapping>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="MessageTypes" parent="GeneXus">
+      <Guid>60a17476-86c0-45f4-9405-bbe193690ed0</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00000000-0000-0000-0000-000000000008" Name="Seguranca_proc" parent="">
+      <Guid>9b89eb9f-b87d-4951-bff8-6b42a9f6640f</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c88fffcd-b6f8-0000-8fec-00b5497e2117" Name="GeneXus" parent="">
+      <Guid>4f454e73-7d8f-4a0f-908a-1a355f3634a5</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMDescriptionShort" parent="GeneXusSecurityCommon">
+      <Guid>555492de-4a68-4109-9597-86d18bd68758</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c88fffcd-b6f8-0000-8fec-00b5497e2117" Name="GeneXusSecurityCommon" parent="">
+      <Guid>fb4bd2a4-ed0e-4418-8a55-860dd04d4ad3</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMDescriptionLong" parent="GeneXusSecurityCommon">
+      <Guid>f991f81c-eaeb-4fa9-8506-679169e49cd3</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMUserIdentification" parent="GeneXusSecurityCommon">
+      <Guid>2c3eb7f5-fd2e-4d1b-af75-c7ba33de8cb1</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMEMail" parent="GeneXusSecurityCommon">
+      <Guid>0d28227d-b11c-4059-a59a-6150d6cd393a</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMGUID" parent="GeneXusSecurityCommon">
+      <Guid>4bafe527-5073-4c7d-964a-ddb1b601f48d</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMPassword" parent="GeneXusSecurityCommon">
+      <Guid>58742444-f138-4d98-825f-9b0f8df9fcb7</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMUserLogin" parent="GeneXusSecurityCommon">
+      <Guid>0b0edd2b-eb1f-48c2-861c-68ff95163890</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="00972a17-9975-449e-aab1-d26165d51393" Name="GAMAPiMode" parent="GeneXusSecurityCommon">
+      <Guid>6133ef83-8e0a-4040-be40-39735ba299c2</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c163e562-42c6-4158-ad83-5b21a14cf30e" Name="GAMError" parent="GeneXusSecurity">
+      <Guid>cfbf5d75-050d-4960-81b5-42e2e47af44d</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c88fffcd-b6f8-0000-8fec-00b5497e2117" Name="GeneXusSecurity" parent="">
+      <Guid>9c06daaa-8132-41f6-a0f7-3afc9b0ab999</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c163e562-42c6-4158-ad83-5b21a14cf30e" Name="GAMRepository" parent="GeneXusSecurity">
+      <Guid>1f5e2657-1fab-42bc-b23f-a04fe72e1870</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c163e562-42c6-4158-ad83-5b21a14cf30e" Name="GAMUser" parent="GeneXusSecurity">
+      <Guid>923ea58a-286d-4d35-90df-0a70c11c8265</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c163e562-42c6-4158-ad83-5b21a14cf30e" Name="GAMRole" parent="GeneXusSecurity">
+      <Guid>d8668d6d-10df-4c7f-94c1-1ca41533f70f</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="447527b5-9210-4523-898b-5dccb17be60a" Name="Messages" parent="GeneXus.Common">
+      <Guid>7ca0895b-df0a-472f-acb8-517e356b2fcd</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="c88fffcd-b6f8-0000-8fec-00b5497e2117" Name="Common" parent="GeneXus">
+      <Guid>8c7152cf-0193-4d7c-bf15-efeb057c5398</Guid>
+    </ObjectIdentity>
+    <ObjectIdentity Type="ecececec-dfe0-4a57-ae8f-c6e31b0dcbc0" Name="Default" parent="">
+      <Guid>e3fdad3f-4ff0-46a1-b689-83f03b39636f</Guid>
+    </ObjectIdentity>
+  </ObjectsIdentityMapping>
+</ExportFile>
